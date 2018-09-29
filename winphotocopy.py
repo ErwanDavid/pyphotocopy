@@ -28,16 +28,19 @@ extensionsPhoto = ['.jpg', '.png', '.jpeg', '.bmp']
 def GetfromExif(fullfile):
     dayfolder = ''
     year = ''
-    f = open(fullfile, 'rb')        # open for meta
-    tags = exifread.process_file(f, stop_tag='DateTimeDigitized')
+    try :
+        f = open(fullfile, 'rb')        # open for meta
+    except :
+        return ''
+    tags = exifread.process_file(f)
     for tag in tags.keys():
-        print('Exif info', tag, "\t",str(tags[tag])[:30])
-        if tag in ('EXIF DateTimeDigitized') or tag in ('EXIF DateTimeOriginal') :
+        if tag in ('EXIF DateTimeOriginal') :
+            #print('    Exif info', tag, "\t",str(tags[tag])[:30])
             datestr = str(tags[tag])
             day = datestr.split(" ")[0]
             if day.find("/") > 0:
                 year = day.split('/')[0]
-                dayfolder = day.replace('/','_')                    
+                dayfolder = day.replace('/','_')
             else:
                 year = day.split(":")[0]
                 dayfolder = day.replace(':','_')
@@ -86,7 +89,7 @@ def GetfromName(fullfilelow):
         month = day[4:-2]
         dom = day[-2:]
         dayfolder = year + '_' + month + '_' + dom
-        print("\t\tDate from folder name 1", dayfolder)
+        #print("\t\tDate from folder name 1", dayfolder)
         return year + '/' + dayfolder
     except:
         match = re.search(r'(20\d+_\d+_\d+)',fullfilelow)
@@ -94,7 +97,7 @@ def GetfromName(fullfilelow):
             day = match.group(1)
             year = day[:4]
             dayfolder = day
-            print("\t\tDate from folder name 2", dayfolder)
+            #print("\t\tDate from folder name 2", dayfolder)
             return year + '/' + dayfolder
         except:
             match = re.search(r'(20\d+-\d+-\d+)',fullfilelow)
@@ -102,7 +105,7 @@ def GetfromName(fullfilelow):
                 day = match.group(1)
                 year = day[:4]
                 dayfolder = day
-                print("\t\tDate from folder name 3", dayfolder)
+                #print("\t\tDate from folder name 3", dayfolder)
                 return year + '/' + dayfolder
             except:
                 print("\t\tDate not found", dayfolder)
@@ -110,7 +113,7 @@ def GetfromName(fullfilelow):
 
 def Getfromattribute(fullfile):
     date = modif_date(fullfile)
-    return datetime.datetime.fromtimestamp(date).strftime('%Y/%Y-%m-%d')
+    return datetime.datetime.fromtimestamp(date).strftime('%Y/%Y_%m_%d')
 
 def getallfile(srcfold):
     allfile = []
@@ -131,19 +134,19 @@ print("Listed", str(len(allfile)), 'files')
 
 for fullfile in allfile:
     fullfilelow = fullfile.lower()
-    print("START ", fullfile)
+    #print("START ", fullfile)
     folderdest = ''
     dayfolder = ''
     # Get from exif
     dayfolder = GetfromExif(fullfile)
-    print("\tDate from exif", dayfolder)
+    #print("\tDate from exif", dayfolder)
     if dayfolder == '':
         dayfolder = GetfromName(fullfilelow)
-        print("\tDate from name", dayfolder)
+        #print("\tDate from name", dayfolder)
 
     if dayfolder == '':
-        dayfolder = Getfromattribute(fullfilelow)
-        print("\tDate from attr", dayfolder)
+        dayfolder = Getfromattribute(fullfile)
+        #print("\tDate from attr", dayfolder)
 
     if dayfolder == '' :
         folderdest = destrootvid + '/unkown'
@@ -153,7 +156,7 @@ for fullfile in allfile:
         else:
             folderdest = destrootvid + '/' + dayfolder
 
-    print("DEST", folderdest)
+    print("File", fullfile, "DEST", folderdest)
 
 
     if not os.path.isdir(folderdest):
