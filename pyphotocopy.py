@@ -8,22 +8,24 @@ import datetime
 
 
 srcfold = ''
-destroottof = ''
-destrootvid = ''
+destroot = ''
+
 nbr_exist = 0
 nbr_new = 0
 
-if len(sys.argv) > 3:
+if len(sys.argv) > 2:
     srcfold = sys.argv[1]
-    destroottof = sys.argv[2]
-    destrootvid = sys.argv[3]
+    destroot = sys.argv[2]
 else:
-    print('argument are src-folder dest-photo dest-video')
+    print('argument are src-folder dest-folder')
     sys.exit(2)
 
 
 
-extensionsPhoto = ['.jpg', '.png', '.jpeg', '.bmp']
+extensionsPhoto = ['.jpg', '.png', '.jpeg', '.bmp', '.tif', '.raw']
+extensionsVideo = ['.mp4', '.avi', '.flv', '.mov', '.rm', '.mpg', '.mpeg']
+
+exclududedFiles = ('Thumbs.db','.picasa.ini')
 
 def GetfromExif(fullfile):
     dayfolder = ''
@@ -67,7 +69,6 @@ def creation_date(path_to_file):
             return stat.st_mtime
 
 def modif_date(path_to_file):
-   
     if platform.system() == 'Windows':
         return os.path.getmtime(path_to_file)
     else:
@@ -119,7 +120,7 @@ def getallfile(srcfold):
     allfile = []
     for root, dirnames, filenames in os.walk(srcfold):
       for curfile in filenames:
-          if curfile not in ('Thumbs.db','.picasa.ini'):
+          if curfile not in exclududedFiles :
               fullname = root + '/'  + curfile
               allfile.append(fullname)
     return allfile
@@ -133,44 +134,53 @@ allfile=getallfile(srcfold)
 print("Listed", str(len(allfile)), 'files')
 
 for fullfile in allfile:
+    fileonly = os.path.basename(fullfile)
     fullfilelow = fullfile.lower()
-    #print("START ", fullfile)
+    print("START ", fullfile)
     folderdest = ''
     dayfolder = ''
-    # Get from exif
-    dayfolder = GetfromExif(fullfile)
-    #print("\tDate from exif", dayfolder)
-    if dayfolder == '':
-        dayfolder = GetfromName(fullfilelow)
-        #print("\tDate from name", dayfolder)
+    source = ''
 
-    if dayfolder == '':
-        dayfolder = Getfromattribute(fullfile)
-        #print("\tDate from attr", dayfolder)
+    dayfolderExif = GetfromExif(fullfile)
+    dayfolderName = GetfromName(fullfile)
+    dayfolderAttr = Getfromattribute(fullfile)
 
-    if dayfolder == '' :
-        folderdest = destrootvid + '/unkown'
+    """
+    print("\tDate from exif", dayfolderExif)
+    print("\tDate from name", dayfolderName)
+    print("\tDate from attr", dayfolderAttr)
+    """
+
+    if dayfolderExif != '':
+        dayfolder = dayfolderExif
+        source = 'exif'
+    elif dayfolderName != '':
+        dayfolder = dayfolderName
+        source = 'name'
+    elif dayfolderAttr != '':
+        dayfolder = dayfolderAttr
+        source = 'attr'
     else:
-        if any(ext in fullfilelow for ext in extensionsPhoto):
-            folderdest = destroottof + '/' + dayfolder
-        else:
-            folderdest = destrootvid + '/' + dayfolder
-
-    print("File", fullfile, "DEST", folderdest)
-
-
+        dayfolder = 'unkown'
+    
+    folderdest = destroot + '/' + dayfolder + '/'
     if not os.path.isdir(folderdest):
-        if folderdest != '':
-            os.makedirs(folderdest)
-    try:
-        fileonly = os.path.basename(fullfile)
-        fulldest = folderdest + '/' + fileonly
-        if(os.path.isfile(fulldest)):
-            nbr_exist = nbr_exist +1
-        else:
-            print ("CP\t: cp ",fullfile, ' ', folderdest)
-            shutil.copy2(fullfile, folderdest)
-            nbr_new = nbr_new +1
-    except:
-        print  ("Error on ",fullfile)
+        os.makedirs(folderdest)
+
+    if any(ext in fullfilelow for ext in extensionsPhoto):
+        fulldest = folderdest + 'I_' + fileonly
+    elif any(ext in fullfilelow for ext in extensionsVideo):
+        fulldest = folderdest + 'V_' + fileonly
+    else : 
+        fulldest = folderdest + 'UNKN_' + fileonly
+
+    print("\t SRC", fullfile, "\n\t DATE", source, "\n\t FOLD", folderdest, "\n\t DEST", fulldest)
+
+    if(os.path.isfile(fulldest)):
+        nbr_exist = nbr_exist +1
+    else:
+        print ("CP\t: cp ",fullfile, ' ', fulldest)
+        shutil.copy2(fullfile, fulldest)
+        nbr_new = nbr_new +1
+
 print ("TOTAL\t: exist",nbr_exist, 'new', nbr_new)
