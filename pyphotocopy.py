@@ -105,7 +105,7 @@ def GetfromName(fullfilelow):
             try:
                 day = match.group(1)
                 year = day[:4]
-                dayfolder = day
+                dayfolder = day.replace('-','_')
                 #print("\t\tDate from folder name 3", dayfolder)
                 return year + '/' + dayfolder
             except:
@@ -162,17 +162,26 @@ for fullfile in allfile:
         source = 'attr'
     else:
         dayfolder = 'unkown'
-    
+
     folderdest = destroot + '/' + dayfolder + '/'
     if not os.path.isdir(folderdest):
         os.makedirs(folderdest)
 
     if any(ext in fullfilelow for ext in extensionsPhoto):
-        fulldest = folderdest + 'I_' + fileonly
+        if 'I_' not in fileonly[:2] :
+            fulldest = folderdest + 'I_' + fileonly
+        else:
+            fulldest = folderdest + fileonly
     elif any(ext in fullfilelow for ext in extensionsVideo):
-        fulldest = folderdest + 'V_' + fileonly
-    else : 
-        fulldest = folderdest + 'UNKN_' + fileonly
+        if 'V_' not in fileonly[:2] :
+            fulldest = folderdest + 'V_' + fileonly
+        else:
+            fulldest = folderdest + fileonly
+    else :
+        if 'UNKN_' not in fileonly :
+            fulldest = folderdest + 'UNKN_' + fileonly
+        else:
+            fulldest = folderdest + fileonly
 
     print("\t SRC", fullfile, "\n\t DATE", source, "\n\t FOLD", folderdest, "\n\t DEST", fulldest)
 
@@ -180,7 +189,8 @@ for fullfile in allfile:
         nbr_exist = nbr_exist +1
     else:
         print ("CP\t: cp ",fullfile, ' ', fulldest)
-        shutil.copy2(fullfile, fulldest)
+        #shutil.copy2(fullfile, fulldest)
+        shutil.move(fullfile,fulldest)
         nbr_new = nbr_new +1
 
 print ("TOTAL\t: exist",nbr_exist, 'new', nbr_new)
