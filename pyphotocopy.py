@@ -36,8 +36,10 @@ def GetfromExif(fullfile):
         return ''
     tags = exifread.process_file(f)
     for tag in tags.keys():
-        if tag in ('EXIF DateTimeOriginal') :
-            #print('    Exif info', tag, "\t",str(tags[tag])[:30])
+        #print(tag, "\t",str(tags[tag])[:30])
+
+        if 'DateTimeOriginal' in tag:
+            #print('  date found in exif', tag, "\t",str(tags[tag])[:30])
             datestr = str(tags[tag])
             day = datestr.split(" ")[0]
             if day.find("/") > 0:
@@ -109,7 +111,7 @@ def GetfromName(fullfilelow):
                 #print("\t\tDate from folder name 3", dayfolder)
                 return year + '/' + dayfolder
             except:
-                print("\t\tDate not found", dayfolder)
+                #print("\t\tDate not found", dayfolder)
                 return ''
 
 def Getfromattribute(fullfile):
@@ -136,7 +138,7 @@ print("Listed", str(len(allfile)), 'files')
 for fullfile in allfile:
     fileonly = os.path.basename(fullfile)
     fullfilelow = fullfile.lower()
-    print("START ", fullfile)
+    #print("START ", fullfile)
     folderdest = ''
     dayfolder = ''
     source = ''
@@ -145,11 +147,9 @@ for fullfile in allfile:
     dayfolderName = GetfromName(fullfile)
     dayfolderAttr = Getfromattribute(fullfile)
 
-    """
-    print("\tDate from exif", dayfolderExif)
-    print("\tDate from name", dayfolderName)
-    print("\tDate from attr", dayfolderAttr)
-    """
+    #print("\tDate from exif", dayfolderExif)
+    #print("\tDate from name", dayfolderName)
+    #print("\tDate from attr", dayfolderAttr)
 
     if dayfolderExif != '':
         dayfolder = dayfolderExif
@@ -183,8 +183,8 @@ for fullfile in allfile:
         else:
             fulldest = folderdest + fileonly
 
-    print("\t SRC", fullfile, "\n\t DATE", source, "\n\t FOLD", folderdest, "\n\t DEST", fulldest)
-
+    #print("\t SRC", fullfile, "\n\t DATE", source, "\n\t FOLD", folderdest, "\n\t DEST", fulldest)
+    print("\t", fileonly, "dest", folderdest, "from", source)
     if(os.path.isfile(fulldest)):
         nbr_exist = nbr_exist +1
     else:
